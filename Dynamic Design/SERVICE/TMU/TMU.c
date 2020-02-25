@@ -5,12 +5,12 @@
  *  Author: Khaled
  */ 
 
-
+ /* Inclusions */
  #include "TMU.h"
 
- /***************************************/
- /************ local macros ************/
- /*************************************/
+ /*
+ *** Local Macros
+ */
 
  /*BUFFER DUTY VALUES*/
  #define USED 1
@@ -21,7 +21,8 @@
  #define EMPTY_BUFFER_LOCATION_INITIAL_VALUE 0
  #define TICK_COUNTER_INITAIL_VALUE 1
 
-
+ /*primitive types*/
+ /*structures*/
   typedef struct str_FuncStatus_t
   {
 	  uint8_t u8_Init_Flag;
@@ -29,7 +30,6 @@
 	  uint8_t u8_Stop_Flag;
 	  uint8_t u8_Deinit_Flag;
   }str_FuncStatus_t;
-
 
   typedef struct str_TMU_Buffer_t
   {
@@ -42,19 +42,16 @@
 	  
   }str_TMU_Buffer_t;
 
-  /*********************************************************/
-  /************ definition of global variables ************/
-  /*******************************************************/
-
    /*create TMU buffer to serve functions*/
-   static str_TMU_Buffer_t arrstr_TMU_Buffer [TMU_BUFFER_SIZE];
+  static str_TMU_Buffer_t arrstr_TMU_Buffer [TMU_BUFFER_SIZE];
 
+  static str_FuncStatus_t  str_FuncStatus;
+  static uint8_t gu8_Buffer_Counter = ZERO;
+  static uint8_t gu8_Ch_ID = ZERO;
+  static uint8_t gu8_Tick_Flag = LOW;	
 
-	static str_FuncStatus_t  str_FuncStatus;
-	static uint8_t gu8_Buffer_Counter = ZERO;
-
-	static uint8_t gu8_Ch_ID = ZERO;
-   static uint8_t	gu8_Tick_Flag = LOW;
+	
+  
 
 
 
