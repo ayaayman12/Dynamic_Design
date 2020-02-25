@@ -25,10 +25,10 @@ int main(void)
 
 	 TMU_Init(&init);
 	 
-	 TMU_Start(10,1,0,t1);
-	 TMU_Start(3,1,0,t2);
-	 TMU_Start(4,3,0,t3);
-	 TMU_Start(5,4,0,t4);
+	 TMU_Start(10,1,PERIODIC,t1);
+	 TMU_Start(3,1,PERIODIC,t2);
+	 TMU_Start(4,3,PERIODIC,t3);
+	 
 	 
 	 /* Replace with your application code */
     while (1) 
@@ -62,6 +62,11 @@ void t1 (void)
 	{
 		TMU_Stop(1,t1);
 	}
+	if ((c % 5) == 0)
+	{
+		TMU_Start(5,4,ONE_SHOT,t4);
+	}
+	
 }
 void t2 (void)
 {

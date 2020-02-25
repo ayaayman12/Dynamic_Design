@@ -154,13 +154,13 @@
     <Compile Include="SERVICE\Errors.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="SERVICE\Errors_Code.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="SERVICE\ERROR\ERROR-STORE.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="SERVICE\ERROR\ERROR-STORE.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SERVICE\ERROR\ERROR_STORE_CFG.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="SERVICE\std_types.h">

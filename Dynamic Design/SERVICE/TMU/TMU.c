@@ -8,9 +8,14 @@
 
  #include "TMU.h"
 
+ /***************************************/
+ /************ local macros ************/
+ /*************************************/
+
  /*BUFFER DUTY VALUES*/
  #define USED 1
  #define NOT_USED 0
+
  #define NOT_INITIALIZED 0
  #define INITIALIZED 1
  #define EMPTY_BUFFER_LOCATION_INITIAL_VALUE 0
@@ -37,7 +42,9 @@
 	  
   }str_TMU_Buffer_t;
 
-   /*definition of global variables*/
+  /*********************************************************/
+  /************ definition of global variables ************/
+  /*******************************************************/
 
    /*create TMU buffer to serve functions*/
    static str_TMU_Buffer_t arrstr_TMU_Buffer [TMU_BUFFER_SIZE];
@@ -50,13 +57,20 @@
    static uint8_t	gu8_Tick_Flag = LOW;
 
 
-	/*prototype for local functions*/
+
+
+	/********************************************************/
+	/************ prototype for local functions ************/
+	/******************************************************/
+	
 	static ERROR_STATUS Is_Buffer_Empty(void);
 	static ERROR_STATUS Is_Buffer_Full(void);
 	static void Timer_CB (void);
 
-	/*implementation of local functions*/
-	static ERROR_STATUS Is_Buffer_Empty(void)
+	/************************************************************/
+	/************ implementation of local functions ************/
+	/**********************************************************/
+ static ERROR_STATUS Is_Buffer_Empty(void)
 	{
 		uint8_t u8_Ret_Status = FALSE;
 		if (gu8_Buffer_Counter == 0)
@@ -70,7 +84,7 @@
 		return u8_Ret_Status;
 	}
 
-	static ERROR_STATUS Is_Buffer_Full(void)
+ static ERROR_STATUS Is_Buffer_Full(void)
 	{
 		uint8_t u8_Ret_Status = FALSE;
 		if (gu8_Buffer_Counter == TMU_BUFFER_SIZE)
@@ -84,7 +98,7 @@
 		return u8_Ret_Status;
 	}
 
-	 void Timer_CB (void)
+ void Timer_CB (void)
 	{
 		Timer_Set_Value(gu8_Ch_ID, 6);
 		gu8_Tick_Flag = HIGH;
@@ -92,9 +106,13 @@
 	}
 
 
-	ERROR_STATUS TMU_Init (const str_TMU_InitConfig_t * pstr_ConfigPtr )
+	/****************************************************************/
+	/************ implementation of interface functions ************/
+	/**************************************************************/
+
+ ERROR_STATUS TMU_Init (const str_TMU_InitConfig_t * pstr_ConfigPtr )
 	{
-		uint8_t Error = NO_ERROR;
+		uint8_t Error = E_OK;
 		if (pstr_ConfigPtr!= NULL)
 		{
 			if (str_FuncStatus.u8_Init_Flag == NOT_INITIALIZED)
@@ -114,24 +132,26 @@
 			}
 			else
 			{
-				Error = ERROR_ALREADY_INITIALIZED;
+				Error_Push (TMU_MODULE, ERROR_ALREADY_INITIALIZED);
+				Error = E_NOK;
 			}
 			
 			
 		}
 		else
 		{
-			Error = ERROR_NULL_POINTER;
+			Error_Push (TMU_MODULE, ERROR_NULL_POINTER);
+			Error = E_NOK;
 		}
-		return Error;
-		
+
+		return Error;	
 	}
 
-	ERROR_STATUS TMU_Dispatch(void)
+ ERROR_STATUS TMU_Dispatch(void)
 	{
 		uint8_t u8_Buffer_Index=0;
 		static uint8_t u8_Flag=0;
-		uint8_t Error = NO_ERROR;
+		uint8_t Error = E_OK;
 		if (HIGH == gu8_Tick_Flag)
 		{for (u8_Buffer_Index=0;u8_Buffer_Index<TMU_BUFFER_SIZE && u8_Flag<gu8_Buffer_Counter;u8_Buffer_Index++)
 		{
@@ -143,11 +163,10 @@
 					
 					arrstr_TMU_Buffer[u8_Buffer_Index].Ptr_Consumer();
 					arrstr_TMU_Buffer[u8_Buffer_Index].u8_Pre_Flag = 0;
-// 					if (gu8_Tick_Flag == 61)
-// 					{
-// 						gu8_Tick_Flag = 1;
-// 					}
-					
+					if (ONE_SHOT == arrstr_TMU_Buffer[u8_Buffer_Index].u8_Repeat)
+					{
+					   TMU_Stop((arrstr_TMU_Buffer[u8_Buffer_Index].u8_Task_ID), (arrstr_TMU_Buffer[u8_Buffer_Index].Ptr_Consumer));
+					}					
 				}
 			}
 		}
@@ -157,48 +176,56 @@
 		return Error;
 	}
 	
-   ERROR_STATUS TMU_Stop(uint8_t Task_Id, void(* Ptr_Func)(void))
+ ERROR_STATUS TMU_Stop(uint8_t Task_Id, void(* Ptr_Func)(void))
 	{
 		uint8_t au8_Search_Loop_Counter = ZERO;
-		uint8_t Error = NO_ERROR;
+		uint8_t Error = E_OK;
 
-		if (FALSE == Is_Buffer_Empty())
+		if (NULL != Ptr_Func)
 		{
-		   /* Search for about given task*/
-		   for (au8_Search_Loop_Counter = ZERO; au8_Search_Loop_Counter < TMU_BUFFER_SIZE; au8_Search_Loop_Counter ++)
+		    if (FALSE == Is_Buffer_Empty())
+		    {
+			    /* Search for about given task*/
+			    for (au8_Search_Loop_Counter = ZERO; au8_Search_Loop_Counter < TMU_BUFFER_SIZE; au8_Search_Loop_Counter ++)
+			    {
+				    
+				    /*Check if this task is the desired to stop*/
+				    if ((Task_Id == arrstr_TMU_Buffer[au8_Search_Loop_Counter].u8_Task_ID) && (Ptr_Func == arrstr_TMU_Buffer[au8_Search_Loop_Counter].Ptr_Consumer))
+				    {
+					    /*stop the task*/
+					    arrstr_TMU_Buffer[au8_Search_Loop_Counter].u8_Duty = NOT_USED;
+					    arrstr_TMU_Buffer[au8_Search_Loop_Counter].Ptr_Consumer = NULL;
+					    /*decrease the buffer*/
+					    gu8_Buffer_Counter --;
+					    break;
+				    }
+			    }
+			    /*if the buffer empty after this decrease stop the timer to stop receiving timer interrupt */
+			    if (TRUE == Is_Buffer_Empty())
+			    Timer_Stop(Timer_0);
+		    }
+		    else
 		   {
-			   
-			   /*Check if this task is the desired to stop*/
-			   if ((Task_Id == arrstr_TMU_Buffer[au8_Search_Loop_Counter].u8_Task_ID) && (Ptr_Func == arrstr_TMU_Buffer[au8_Search_Loop_Counter].Ptr_Consumer))
-			   {
-				   /*stop the task*/
-					arrstr_TMU_Buffer[au8_Search_Loop_Counter].u8_Duty = NOT_USED;
-					arrstr_TMU_Buffer[au8_Search_Loop_Counter].Ptr_Consumer = NULL;
-					/*decrease the buffer*/
-					gu8_Buffer_Counter --;
-				   break;
-			   }
+		      Error_Push (TMU_MODULE, ERROR_EMPTY_BUFFER);
+				Error = E_NOK;
 		   }
-			/*if the buffer empty after this decrease stop the timer to stop receiving timer interrupt */
-			if (TRUE == Is_Buffer_Empty())
-					Timer_Stop(Timer_0);
-		} 
-
-		
+		}
 		else
 		{
-		   Error = ERROR_EMPTY_BUFFER;
+		   Error_Push (TMU_MODULE, ERROR_NULL_POINTER);
+			Error = E_NOK;
 		}
+	
 		return Error;	
 	}
 
-	ERROR_STATUS TMU_Start (uint16_t Time_Delay,uint8_t Task_Id, uint8_t Repeat, void(* Ptr_Func)(void))
+ ERROR_STATUS TMU_Start (uint16_t Time_Delay,uint8_t Task_Id, uint8_t Repeat, void(* Ptr_Func)(void))
   {
      /*variable for linear search algorithm*/
 	  uint8_t au8_Search_Loop_Counter = ZERO;
 	  sint8_t aS8_Empty_Buffer_Location = EMPTY_BUFFER_LOCATION_INITIAL_VALUE;
 	  uint8_t au8_Already_Started = NOT_INITIALIZED;
-	  uint8_t Error = NO_ERROR;
+	  uint8_t Error = E_OK;
 
 	  if (INITIALIZED == str_FuncStatus.u8_Init_Flag)
 	  {
@@ -257,28 +284,34 @@
 
 				
 				else
-				Error = ERROR_NULL_POINTER;
-				
+				{
+				   Error_Push (TMU_MODULE, ERROR_NULL_POINTER);
+					Error = E_NOK;
+				}
 		  }
 
-		  
 		  else
-		  Error = ERROR_FULL_BUFFER;
+		  {
+		     Error_Push (TMU_MODULE, ERROR_FULL_BUFFER);
+			  Error = E_NOK;
+		  }
 		  
 	  }
 
-	  
 	  else
-	  Error = ERROR_NOT_INITIALIZED;
+	  {
+	     Error_Push (TMU_MODULE, ERROR_NOT_INITIALIZED);
+		  Error = E_NOK;
+	  }
+	  
 	  
 	  
 	  return Error;
   }
 
-
-ERROR_STATUS TMU_DeInit (void)
+ ERROR_STATUS TMU_DeInit (void)
 {
-	uint8_t Error = NO_ERROR;
+	uint8_t Error = E_OK;
 	if (INITIALIZED == str_FuncStatus.u8_Init_Flag)
 	{
 		if (TRUE == Is_Buffer_Empty())
@@ -290,12 +323,14 @@ ERROR_STATUS TMU_DeInit (void)
 		}
 		else
 		{
-		Error = ERROR_NOT_EMPTY_BUFFER;
+		   Error_Push (TMU_MODULE, ERROR_NOT_EMPTY_BUFFER);
+		   Error = E_NOK;
 		}
 	}
 	else
 	{
-	Error = ERROR_NOT_INITIALIZED;
+	   Error_Push (TMU_MODULE, ERROR_NOT_INITIALIZED);
+	   Error = E_NOK;
 	}
 	return Error;
 }

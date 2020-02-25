@@ -10,7 +10,7 @@
 #define TMU_CFG_H_
 
 
-#define TMU_BUFFER_SIZE     3
+#define TMU_BUFFER_SIZE     5
 
 
 #endif /* TMU_CFG_H_ */
