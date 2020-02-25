@@ -6,6 +6,8 @@ main.c
 
 MCAL\Timers.c
 
+SERVICE\ERROR\ERROR-STORE.c
+
 SERVICE\TMU\TMU.c
 
 SERVICE\TMU\TMU_PbCfg.c

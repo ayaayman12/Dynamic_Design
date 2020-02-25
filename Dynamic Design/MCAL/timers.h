@@ -36,10 +36,12 @@ typedef struct Timer_Cfg_ST{
 	uint8_t Timer_Mode;
 	uint8_t Timer_PreScaler;
 	uint8_t Timer_Interrupt_Mode;
+   void(* Ptr_TCB_Function)(void);
+
 }Timer_Cfg_ST;
 
 
-extern uint8_t ISR_Flag;
+
 
 
 /**

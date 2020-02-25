@@ -13,6 +13,7 @@
 #include "TMU_Cfg.h"
 #include "TMU_PbCfg.h"
 #include "../../MCAL/timers.h"
+#include "../Errors.h"
 
 
 

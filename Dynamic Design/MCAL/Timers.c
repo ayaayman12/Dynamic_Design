@@ -87,14 +87,14 @@
 /**********************************************************************************************************************************/
 
  
- uint8_t ISR_Flag = 1;
+
 
  static uint8_t gu8_PreScaler_T0       = ZERO;
  static uint8_t gu8_PreScaler_T1       = ZERO;
  static uint8_t gu8_PreScaler_T2       = ZERO;
  static uint8_t au8_Temp_For_Low_Bit   = ZERO;
  static uint8_t au8_Temp_For_Hight_Bit = ZERO;
-
+ static void (*ptr_CBF)(void) = NULL;
 
  uint8_t Timer_Init (Timer_Cfg_ST *Timer_Info)
  {
@@ -156,6 +156,7 @@
 			    break;
 
 			    case TIMER_MODE_INTERRUPT:
+				 ptr_CBF = Timer_Info->Ptr_TCB_Function;
 			    TIMSK |= T0_INTERRUPT_NORMAL;
 				 SET_BIT (SREG,BIT7);
 			    break;
@@ -526,6 +527,5 @@
 
  Inturrept_Function (TIMER0_OVF_vect)
  {
-    ISR_Flag++;
-	 TCNT0 = 6;
+    ptr_CBF();
  }

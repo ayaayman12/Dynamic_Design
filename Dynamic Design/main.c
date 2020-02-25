@@ -51,7 +51,7 @@ void t1 (void)
 	}
 	if (c == 500)
 	{
-		TMU_Start(3,1,0,t2);
+		TMU_Start(6,1,0,t2);
 	}
 	if (c == 800)
 	{
